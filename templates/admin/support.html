@@ -1,0 +1,97 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Support Inquiries & Scholar Feedback — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="margin-bottom:28px;">
+  <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+    Support & Feedback Operations
+  </h1>
+  <p style="color:var(--text-muted); font-size:0.92rem;">
+    Triaging incoming scholar inquiries, assigning staff responders, tracking resolution SLAs, and reviewing feedback.
+  </p>
+</div>
+
+<!-- Support Tickets Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+  <div style="padding:18px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+      Inquiry Queue & SLA Tracking
+    </h3>
+    <span class="badge" style="background:var(--bg-surface-elevated); font-family:var(--font-mono);">
+      {{ tickets | length }} Tickets
+    </span>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Subject & Description</th>
+          <th>Scholar Email</th>
+          <th>Priority</th>
+          <th>Current Status</th>
+          <th>Assigned Staff</th>
+          <th style="text-align:right;">Update Ticket</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not tickets %}
+          <tr>
+            <td colspan="6" style="text-align:center; padding:44px; color:var(--text-muted);">
+              <div style="width:48px; height:48px; border-radius:50%; background:var(--bg-surface-elevated); color:var(--primary); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+              </div>
+              No open support inquiries at this moment.
+            </td>
+          </tr>
+        {% else %}
+          {% for t in tickets %}
+            <tr>
+              <td>
+                <div style="font-weight:700; color:var(--text-main);">{{ t.subject }}</div>
+                <div style="font-size:0.84rem; color:var(--text-muted); max-width:340px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  {{ t.description }}
+                </div>
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted);">
+                {{ t.user_email }}
+              </td>
+              <td>
+                <span class="badge" style="background:{{ 'rgba(239,68,68,0.15)' if t.priority=='urgent' else ('rgba(245,158,11,0.15)' if t.priority=='high' else 'var(--bg-surface-elevated)') }}; color:{{ 'var(--danger)' if t.priority=='urgent' else ('var(--accent)' if t.priority=='high' else 'var(--text-muted)') }}; font-size:0.75rem; text-transform:uppercase;">
+                  {{ t.priority }}
+                </span>
+              </td>
+              <td>
+                <span class="badge {{ 'ready' if t.status=='resolved' else ('indexing' if t.status=='in_progress' else 'error') }}">
+                  {{ t.status.replace('_', ' ') | capitalize }}
+                </span>
+              </td>
+              <td style="font-size:0.84rem; color:var(--text-muted);">
+                {{ t.assignee_email or 'Unassigned' }}
+              </td>
+              <td style="text-align:right;">
+                <form method="post" action="{{ url_for('admin.update_ticket_status', ticket_id=t.id) }}" style="display:inline-flex; gap:6px; align-items:center;">
+                  <select name="status" style="padding:4px 8px; font-size:0.8rem; width:auto;">
+                    <option value="open" {{ 'selected' if t.status=='open' else '' }}>Open</option>
+                    <option value="in_progress" {{ 'selected' if t.status=='in_progress' else '' }}>In Progress</option>
+                    <option value="resolved" {{ 'selected' if t.status=='resolved' else '' }}>Resolved</option>
+                    <option value="closed" {{ 'selected' if t.status=='closed' else '' }}>Closed</option>
+                  </select>
+                  <select name="assigned_to" style="padding:4px 8px; font-size:0.8rem; width:auto;">
+                    <option value="">Assignee...</option>
+                    {% for s in staff %}
+                      <option value="{{ s.id }}" {{ 'selected' if t.assigned_to==s.id else '' }}>{{ s.email.split('@')[0] }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn alt sm">Save</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

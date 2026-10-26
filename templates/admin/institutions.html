@@ -1,0 +1,197 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Institutions & Classroom Cohorts — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="margin-bottom:28px;">
+  <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+    Institution & Classroom Cohorts
+  </h1>
+  <p style="color:var(--text-muted); font-size:0.92rem;">
+    Manage multi-tenant academic institutions, assign classroom educators, and inspect aggregate student rosters.
+  </p>
+</div>
+
+<!-- Forms Section: Register Institution & Create Classroom -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:24px; margin-bottom:32px;">
+  
+  <!-- Register Institution Form -->
+  <div class="card tilt-card" style="padding:24px;">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path></svg>
+      <span>Register Institution</span>
+    </h3>
+    <form method="post" action="{{ url_for('admin.create_institution') }}" style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+          Institution Name
+        </label>
+        <input type="text" name="name" placeholder="e.g. Oxford University / St. Joseph's College" required>
+      </div>
+
+      <div>
+        <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+          Official Domain
+        </label>
+        <input type="text" name="domain" placeholder="e.g. ox.ac.uk or college.edu">
+      </div>
+
+      <button type="submit" class="btn accent sm" style="align-self:flex-start;">
+        Register Institution
+      </button>
+    </form>
+  </div>
+
+  <!-- Create Classroom Form -->
+  <div class="card tilt-card" style="padding:24px;">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      <span>Create Classroom Cohort</span>
+    </h3>
+    <form method="post" action="{{ url_for('admin.create_classroom') }}" style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+          Classroom Title
+        </label>
+        <input type="text" name="name" placeholder="e.g. CS401: Deep Learning Seminar" required>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div>
+          <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+            Enrollment Code
+          </label>
+          <input type="text" name="code" placeholder="DL2026" required style="font-family:var(--font-mono); text-transform:uppercase;">
+        </div>
+
+        <div>
+          <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+            Institution
+          </label>
+          <select name="institution_id">
+            <option value="">None (Independent)</option>
+            {% for inst in institutions %}
+              <option value="{{ inst.id }}">{{ inst.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+          Lead Educator / Teacher
+        </label>
+        <select name="teacher_id">
+          {% for t in teachers %}
+            <option value="{{ t.id }}">{{ t.email }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn accent sm" style="align-self:flex-start;">
+        Launch Classroom
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<!-- Classrooms List Table -->
+<div class="card" style="padding:0; overflow:hidden; margin-bottom:32px;">
+  <div style="padding:18px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+      Active Classrooms & Study Cohorts
+    </h3>
+    <span class="badge" style="background:var(--bg-surface-elevated); font-family:var(--font-mono);">
+      {{ classrooms | length }} Classrooms
+    </span>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Classroom Name</th>
+          <th>Enrollment Code</th>
+          <th>Institution</th>
+          <th>Lead Teacher</th>
+          <th>Enrolled Scholars</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not classrooms %}
+          <tr>
+            <td colspan="5" style="text-align:center; padding:36px; color:var(--text-muted);">
+              No classrooms created yet. Use the form above to register your first cohort.
+            </td>
+          </tr>
+        {% else %}
+          {% for c in classrooms %}
+            <tr>
+              <td style="font-weight:700;">{{ c.name }}</td>
+              <td>
+                <span class="badge" style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); font-family:var(--font-mono); font-weight:700; letter-spacing:0.06em;">
+                  {{ c.code }}
+                </span>
+              </td>
+              <td style="color:var(--text-muted);">{{ c.institution_name or 'Independent' }}</td>
+              <td style="font-family:var(--font-mono); font-size:0.84rem; color:var(--text-muted);">{{ c.teacher_email }}</td>
+              <td>
+                <span class="badge ready">
+                  {{ c.student_count }} Students
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Institutions Directory Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+  <div style="padding:18px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+      Registered Academic Institutions
+    </h3>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Institution Name</th>
+          <th>Slug</th>
+          <th>Domain</th>
+          <th>Classrooms</th>
+          <th>Members</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not institutions %}
+          <tr>
+            <td colspan="6" style="text-align:center; padding:36px; color:var(--text-muted);">
+              No institutions registered yet.
+            </td>
+          </tr>
+        {% else %}
+          {% for i in institutions %}
+            <tr>
+              <td style="font-weight:700;">{{ i.name }}</td>
+              <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-faint);">{{ i.slug }}</td>
+              <td style="font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted);">{{ i.domain or '-' }}</td>
+              <td>{{ i.class_count }}</td>
+              <td>{{ i.member_count }}</td>
+              <td>
+                <span class="badge ready">{{ i.status | capitalize }}</span>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

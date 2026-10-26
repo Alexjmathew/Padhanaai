@@ -1,0 +1,157 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}AI Usage & Cloud Cost Monitor — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="margin-bottom:28px;">
+  <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+    AI Usage & Cloud Cost Monitor
+  </h1>
+  <p style="color:var(--text-muted); font-size:0.92rem;">
+    Real-time telemetry on token consumption, request latency, error distribution, and Nebius token expense.
+  </p>
+</div>
+
+<!-- Summary Cost & Token Cards with 3D Tilt -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:18px; margin-bottom:30px;">
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#10b981;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    </div>
+    <div>
+      <div class="stat-number">${{ total_cost }}</div>
+      <div class="stat-label">Estimated AI Cost ($)</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#38bdf8;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ total_tokens }}</div>
+      <div class="stat-label">Total Tokens Consumed</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:var(--accent);">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+    </div>
+    <div>
+      <div class="stat-number">
+        {{ (model_stats | map(attribute='avg_latency') | list | sum / (model_stats | length or 1)) | round(1) if model_stats else 0 }} ms
+      </div>
+      <div class="stat-label">Average Response Latency</div>
+    </div>
+  </div>
+</div>
+
+<!-- Model Tier Breakdown -->
+<div class="card" style="margin-bottom:30px; padding:0; overflow:hidden;">
+  <div style="padding:18px 24px; border-bottom:1px solid var(--border-subtle);">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+      Model Tier Quota & Expense Breakdown
+    </h3>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Operation Kind</th>
+          <th>Total Requests</th>
+          <th>Prompt Tokens</th>
+          <th>Completion Tokens</th>
+          <th>Avg Latency</th>
+          <th>Est. Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not model_stats %}
+          <tr>
+            <td colspan="6" style="text-align:center; padding:32px; color:var(--text-muted);">
+              No AI usage events logged yet.
+            </td>
+          </tr>
+        {% else %}
+          {% for m in model_stats %}
+            <tr>
+              <td style="font-weight:700; text-transform:capitalize;">
+                {{ m.kind }}
+              </td>
+              <td style="font-family:var(--font-mono);">{{ m.req_count }}</td>
+              <td style="font-family:var(--font-mono); color:var(--text-muted);">{{ m.p_tokens or 0 }}</td>
+              <td style="font-family:var(--font-mono); color:var(--text-muted);">{{ m.c_tokens or 0 }}</td>
+              <td style="font-family:var(--font-mono);">{{ (m.avg_latency or 0) | round(1) }} ms</td>
+              <td style="font-family:var(--font-mono); font-weight:700; color:var(--primary);">${{ (m.total_cost or 0) | round(4) }}</td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Recent Invocations Telemetry -->
+<div class="card" style="padding:0; overflow:hidden;">
+  <div style="padding:18px 24px; border-bottom:1px solid var(--border-subtle);">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+      Recent Model Invocations
+    </h3>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>User</th>
+          <th>Kind</th>
+          <th>Model</th>
+          <th>Tokens</th>
+          <th>Latency</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not recent_events %}
+          <tr>
+            <td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted);">
+              No recent events found.
+            </td>
+          </tr>
+        {% else %}
+          {% for e in recent_events %}
+            <tr>
+              <td style="font-family:var(--font-mono); font-size:0.78rem; color:var(--text-muted);">
+                {{ (e.created_at | string)[:19] }}
+              </td>
+              <td style="font-size:0.84rem;">{{ e.user_email or 'Scholar' }}</td>
+              <td>
+                <span class="badge" style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); text-transform:uppercase; font-size:0.72rem;">
+                  {{ e.kind }}
+                </span>
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-faint);">
+                {{ e.model or 'default' }}
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.82rem;">
+                {{ (e.prompt_tokens or 0) + (e.completion_tokens or 0) }}
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.82rem;">
+                {{ (e.latency_ms or 0) | round(1) }} ms
+              </td>
+              <td>
+                <span class="badge {{ 'ready' if not e.error else 'error' }}">
+                  {{ 'OK' if not e.error else 'Error' }}
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

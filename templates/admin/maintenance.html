@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scheduled Maintenance — PadhanaAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;">
+  <div class="card tilt-card" style="max-width:520px; width:100%; text-align:center; padding:48px 36px; box-shadow:var(--shadow-lg);">
+    <div style="width:64px; height:64px; border-radius:50%; background:var(--accent-light); color:var(--accent); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; border:1px solid rgba(245,158,11,0.3);">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+    </div>
+    <h2 style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; margin-bottom:10px;">
+      Platform Under Maintenance
+    </h2>
+    <p style="color:var(--text-muted); font-size:0.95rem; line-height:1.6; margin-bottom:24px;">
+      PadhanaAI is undergoing scheduled system optimization and database maintenance. Normal access will be restored shortly.
+    </p>
+    <div style="display:flex; justify-content:center; gap:12px;">
+      <a href="{{ url_for('login') }}" class="btn alt sm">Staff Sign In</a>
+      <button onclick="window.location.reload()" class="btn accent sm">Check Status</button>
+    </div>
+  </div>
+</body>
+</html>

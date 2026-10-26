@@ -1,0 +1,180 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Enterprise Dashboard Overview — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+  <div>
+    <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+      Governance & Platform Overview
+    </h1>
+    <p style="color:var(--text-muted); font-size:0.92rem;">
+      Unified monitoring of scholars, learning materials, AI compute quotas, and security audits.
+    </p>
+  </div>
+
+  <div style="display:flex; gap:10px;">
+    <a href="{{ url_for('admin.users') }}" class="btn alt sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+      <span>Manage Users</span>
+    </a>
+    <a href="{{ url_for('admin.backups_view') }}" class="btn accent sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      <span>Backup Snapshot</span>
+    </a>
+  </div>
+</div>
+
+<!-- 8 KPI Cards Grid with 3D Tilt -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:18px; margin-bottom:32px;">
+  
+  <div class="stat-card tilt-card">
+    <div class="stat-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ total_users }}</div>
+      <div class="stat-label">Registered Scholars</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#38bdf8;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ active_users_7d }}</div>
+      <div class="stat-label">Active (7 Days)</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:var(--accent);">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ total_docs }}</div>
+      <div class="stat-label">Indexed Documents ({{ total_pages }} pgs)</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#10b981;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ total_ai_reqs }}</div>
+      <div class="stat-label">AI RAG Invocations</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#a855f7;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ total_quizzes }}</div>
+      <div class="stat-label">Quizzes Completed</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#10b981;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    </div>
+    <div>
+      <div class="stat-number">${{ total_cost }}</div>
+      <div class="stat-label">Estimated AI Cost</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:{{ 'var(--danger)' if pending_reports > 0 else 'var(--text-muted)' }};">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ pending_reports }}</div>
+      <div class="stat-label">Pending Reports</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#f59e0b;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ open_tickets }}</div>
+      <div class="stat-label">Open Support Tickets</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Recent Security & Audit Logs Section -->
+<div class="card" style="margin-bottom:30px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+    <div>
+      <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+        Recent Security & Audit Trail
+      </h3>
+      <p style="color:var(--text-muted); font-size:0.85rem;">
+        Immutable event records of authentication, authorization, and administrative changes.
+      </p>
+    </div>
+    <a href="{{ url_for('admin.audit_logs_view') }}" class="btn alt sm">
+      View All Audit Logs
+    </a>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Actor</th>
+          <th>Action</th>
+          <th>Target</th>
+          <th>Status</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not recent_logs %}
+          <tr>
+            <td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">
+              No audit records recorded yet.
+            </td>
+          </tr>
+        {% else %}
+          {% for log in recent_logs %}
+            <tr>
+              <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">
+                {{ (log.created_at | string)[:19] }}
+              </td>
+              <td style="font-weight:600;">
+                {{ log.user_email or 'System / Anonymous' }}
+              </td>
+              <td>
+                <span class="badge" style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); font-family:var(--font-mono); font-size:0.75rem;">
+                  {{ log.action }}
+                </span>
+              </td>
+              <td style="color:var(--text-muted); font-size:0.84rem;">
+                {{ log.target_type or '-' }}: {{ log.target_id or '-' }}
+              </td>
+              <td>
+                <span class="badge {{ 'ready' if log.status == 'success' else 'error' }}">
+                  {{ log.status }}
+                </span>
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-faint);">
+                {{ log.ip_address or '127.0.0.1' }}
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Feature Flags & Maintenance Mode — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="margin-bottom:28px;">
+  <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+    Feature Flags & Maintenance Mode
+  </h1>
+  <p style="color:var(--text-muted); font-size:0.92rem;">
+    Dynamically roll out experimental AI capabilities, configure audience targeting, and manage platform maintenance windows without redeployment.
+  </p>
+</div>
+
+<!-- Feature Flags Grid -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
+  {% for f in flags %}
+    <div class="card tilt-card" style="display:flex; flex-direction:column; justify-content:space-between; border-color:{{ 'var(--primary)' if f.is_enabled and f.key != 'maintenance_mode' else ('var(--danger)' if f.key == 'maintenance_mode' and f.is_enabled else 'var(--border-subtle)') }};">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+          <div>
+            <h3 style="font-family:var(--font-display); font-size:1.15rem; font-weight:700;">{{ f.name }}</h3>
+            <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-faint);">{{ f.key }}</div>
+          </div>
+          <span class="badge {{ 'ready' if f.is_enabled and f.key != 'maintenance_mode' else ('error' if f.is_enabled and f.key == 'maintenance_mode' else '') }}" style="text-transform:uppercase; font-size:0.72rem;">
+            {{ 'Enabled' if f.is_enabled else 'Disabled' }}
+          </span>
+        </div>
+
+        <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.5; margin-bottom:18px;">
+          {{ f.description }}
+        </p>
+      </div>
+
+      <form method="post" action="{{ url_for('admin.toggle_feature_flag', key=f.key) }}" style="border-top:1px solid var(--border-subtle); padding-top:14px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">AUDIENCE:</span>
+          <select name="audience" style="padding:4px 8px; font-size:0.8rem; width:auto;">
+            <option value="all" {{ 'selected' if f.audience=='all' else '' }}>All Scholars</option>
+            <option value="institution" {{ 'selected' if f.audience=='institution' else '' }}>Institutions Only</option>
+            <option value="beta" {{ 'selected' if f.audience=='beta' else '' }}>Beta Cohort</option>
+            <option value="admin_only" {{ 'selected' if f.audience=='admin_only' else '' }}>Staff / Admin Only</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn sm {{ 'danger' if f.is_enabled else 'accent' }}">
+          {{ 'Deactivate' if f.is_enabled else 'Activate' }}
+        </button>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Backup & Data Retention Governance — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+  <div>
+    <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+      Backup & Data Retention Governance
+    </h1>
+    <p style="color:var(--text-muted); font-size:0.92rem;">
+      Point-in-time database snapshots, retention schedules, disaster recovery, and sovereign deletion compliance.
+    </p>
+  </div>
+  <form method="post" action="{{ url_for('admin.create_backup') }}" onsubmit="return confirm('Generate an immediate point-in-time snapshot?');">
+    <button type="submit" class="btn accent sm">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      <span>Create Immediate Snapshot</span>
+    </button>
+  </form>
+</div>
+
+<!-- Storage Info & Retention Settings Cards with 3D Tilt -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-bottom:30px;">
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:var(--primary);">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+    </div>
+    <div>
+      <div class="stat-number">{{ db_size_mb }} MB</div>
+      <div class="stat-label">Active Database Size</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#38bdf8;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    </div>
+    <div>
+      <div class="stat-number">90 Days</div>
+      <div class="stat-label">Snapshot Retention Window</div>
+    </div>
+  </div>
+
+  <div class="stat-card tilt-card">
+    <div class="stat-icon" style="color:#10b981;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+    </div>
+    <div>
+      <div class="stat-number">Purged on Delete</div>
+      <div class="stat-label">Zero-Residual Data Policy</div>
+    </div>
+  </div>
+</div>
+
+<!-- Snapshots History Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+  <div style="padding:18px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+      Available Database Snapshots
+    </h3>
+    <span class="badge" style="background:var(--bg-surface-elevated); font-family:var(--font-mono);">
+      {{ snapshots | length }} Snapshots Archived
+    </span>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Snapshot Filename</th>
+          <th>Size</th>
+          <th>Status</th>
+          <th>Retention Limit</th>
+          <th>Created Timestamp</th>
+          <th style="text-align:right;">Export</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not snapshots %}
+          <tr>
+            <td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">
+              No backup snapshots generated yet. Click "Create Immediate Snapshot" above to create one.
+            </td>
+          </tr>
+        {% else %}
+          {% for s in snapshots %}
+            <tr>
+              <td style="font-weight:700; font-family:var(--font-mono); font-size:0.85rem;">
+                {{ s.name }}
+              </td>
+              <td style="font-family:var(--font-mono); color:var(--text-muted);">
+                {{ (s.size_bytes / (1024 * 1024)) | round(2) }} MB
+              </td>
+              <td>
+                <span class="badge ready">
+                  {{ s.status }}
+                </span>
+              </td>
+              <td style="font-size:0.84rem; color:var(--text-faint);">
+                {{ s.retention_days }} Days
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">
+                {{ (s.created_at | string)[:19] }}
+              </td>
+              <td style="text-align:right;">
+                <a href="{{ url_for('admin.download_backup', name=s.name) }}" class="btn alt sm">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Download .db</span>
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

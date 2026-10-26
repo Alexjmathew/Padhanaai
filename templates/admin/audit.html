@@ -1,0 +1,100 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Security & Audit Logs — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:16px;">
+  <div>
+    <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+      Security & Audit Logs
+    </h1>
+    <p style="color:var(--text-muted); font-size:0.92rem;">
+      Tamper-evident, immutable event records of administrative operations, privilege assignments, and security violations.
+    </p>
+  </div>
+  <div style="display:flex; gap:10px;">
+    <button class="btn alt sm" onclick="window.print()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      <span>Print Report</span>
+    </button>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card" style="padding:16px 20px; margin-bottom:24px;">
+  <form method="get" action="{{ url_for('admin.audit_logs_view') }}" style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
+    <div style="min-width:220px; flex:1;">
+      <select name="action" onchange="this.form.submit()">
+        <option value="">All Security Actions</option>
+        {% for a in actions %}
+          <option value="{{ a }}" {{ 'selected' if action_filter == a else '' }}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="min-width:220px; flex:1;">
+      <input type="text" name="user" value="{{ user_filter }}" placeholder="Filter by actor email...">
+    </div>
+
+    <button type="submit" class="btn alt sm">Filter Logs</button>
+    {% if action_filter or user_filter %}
+      <a href="{{ url_for('admin.audit_logs_view') }}" class="btn alt sm danger">Reset</a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Audit Logs Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Actor Email</th>
+          <th>Security Action</th>
+          <th>Target Resource</th>
+          <th>Status</th>
+          <th>Details / IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not logs %}
+          <tr>
+            <td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">
+              No audit records match the current criteria.
+            </td>
+          </tr>
+        {% else %}
+          {% for l in logs %}
+            <tr>
+              <td style="font-family:var(--font-mono); font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">
+                {{ (l.created_at | string)[:19] }}
+              </td>
+              <td style="font-weight:600; font-size:0.86rem;">
+                {{ l.user_email or 'Anonymous' }}
+              </td>
+              <td>
+                <span class="badge" style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); font-family:var(--font-mono); font-size:0.75rem;">
+                  {{ l.action }}
+                </span>
+              </td>
+              <td style="color:var(--text-muted); font-size:0.84rem; font-family:var(--font-mono);">
+                {{ l.target_type or '-' }}:{{ l.target_id or '-' }}
+              </td>
+              <td>
+                <span class="badge {{ 'ready' if l.status == 'success' else 'error' }}">
+                  {{ l.status }}
+                </span>
+              </td>
+              <td style="font-size:0.82rem; color:var(--text-faint);">
+                <div>{{ l.details or '-' }}</div>
+                <div style="font-family:var(--font-mono); font-size:0.75rem;">IP: {{ l.ip_address or '127.0.0.1' }}</div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

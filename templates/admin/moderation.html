@@ -1,0 +1,101 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Document Moderation Center — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="margin-bottom:28px;">
+  <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+    Document Moderation Center
+  </h1>
+  <p style="color:var(--text-muted); font-size:0.92rem;">
+    Review reported study materials, inspect copyright or community violations, and enact safety takedowns.
+  </p>
+</div>
+
+<!-- Moderation Reports Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+  <div style="padding:20px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+      Flagged Content Queue
+    </h3>
+    <span class="badge" style="background:var(--bg-surface-elevated); font-family:var(--font-mono);">
+      {{ reports | length }} Total Reports
+    </span>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Material Title</th>
+          <th>Report Reason</th>
+          <th>Reporter</th>
+          <th>Material Owner</th>
+          <th>Status</th>
+          <th style="text-align:right;">Resolution Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not reports %}
+          <tr>
+            <td colspan="6" style="text-align:center; padding:48px; color:var(--text-muted);">
+              <div style="width:48px; height:48px; border-radius:50%; background:var(--bg-surface-elevated); color:var(--primary); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              All clear! No pending document moderation reports in queue.
+            </td>
+          </tr>
+        {% else %}
+          {% for r in reports %}
+            <tr>
+              <td>
+                <div style="font-weight:700; color:var(--text-main);">{{ r.doc_title }}</div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Doc State: {{ r.doc_status }}</div>
+              </td>
+              <td style="color:var(--danger); font-weight:600; font-size:0.85rem;">
+                {{ r.reason }}
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted);">
+                {{ r.reporter_email }}
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted);">
+                {{ r.owner_email }}
+              </td>
+              <td>
+                <span class="badge {{ 'error' if r.status=='takedown' else ('ready' if r.status=='reviewed' else 'indexing') }}">
+                  {{ r.status | capitalize }}
+                </span>
+              </td>
+              <td style="text-align:right;">
+                <div style="display:inline-flex; gap:8px;">
+                  {% if r.status != 'takedown' %}
+                    <form method="post" action="{{ url_for('admin.moderation_action', report_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Take down {{ r.doc_title }} immediately?');">
+                      <input type="hidden" name="action" value="takedown">
+                      <input type="hidden" name="notes" value="Takedown enforced by moderator">
+                      <button type="submit" class="btn alt sm danger">Takedown</button>
+                    </form>
+                  {% else %}
+                    <form method="post" action="{{ url_for('admin.moderation_action', report_id=r.id) }}" style="display:inline;">
+                      <input type="hidden" name="action" value="restore">
+                      <input type="hidden" name="notes" value="Restored after verification">
+                      <button type="submit" class="btn alt sm">Restore</button>
+                    </form>
+                  {% endif %}
+
+                  {% if r.status == 'pending' %}
+                    <form method="post" action="{{ url_for('admin.moderation_action', report_id=r.id) }}" style="display:inline;">
+                      <input type="hidden" name="action" value="dismiss">
+                      <input type="hidden" name="notes" value="Dismissed: No violation detected">
+                      <button type="submit" class="btn alt sm">Dismiss</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

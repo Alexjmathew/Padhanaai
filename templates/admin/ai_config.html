@@ -1,0 +1,69 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}AI Model Configuration & Prompt Governance — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="margin-bottom:28px;">
+  <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+    AI Model Configuration & System Prompts
+  </h1>
+  <p style="color:var(--text-muted); font-size:0.92rem;">
+    Configure tier-based model routing, context window ceilings, decoding temperature, and safety constraints.
+  </p>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:24px;">
+  {% for c in configs %}
+    <div class="card tilt-card" style="padding:26px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div>
+          <h3 style="font-family:var(--font-display); font-size:1.25rem; font-weight:700; text-transform:capitalize;">
+            {{ c.tier }} Tier
+          </h3>
+          <span style="font-size:0.8rem; color:var(--text-faint); font-family:var(--font-mono);">
+            Routing Category: {{ c.tier }}
+          </span>
+        </div>
+        <span class="badge {{ 'ready' if c.is_active else 'error' }}">
+          {{ 'Active' if c.is_active else 'Inactive' }}
+        </span>
+      </div>
+
+      <form method="post" action="{{ url_for('admin.update_ai_config', tier=c.tier) }}" style="display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+            Nebius / OpenAI Model Identifier
+          </label>
+          <input type="text" name="model_id" value="{{ c.model_id }}" required style="font-family:var(--font-mono); font-size:0.86rem;">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+              Max Tokens Limit
+            </label>
+            <input type="number" name="max_tokens" value="{{ c.max_tokens }}" min="100" max="8000" required>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+              Temperature
+            </label>
+            <input type="number" step="0.05" name="temperature" value="{{ c.temperature }}" min="0.0" max="1.0" required>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">
+            System Prompt Instruction Override
+          </label>
+          <textarea name="system_prompt" rows="3" style="width:100%; background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); color:var(--text-main); padding:10px 14px; border-radius:var(--radius-md); font-family:var(--font-sans); font-size:0.86rem; line-height:1.5;">{{ c.system_prompt or '' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn accent sm" style="align-self:flex-start;">
+          Save Tier Configuration
+        </button>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

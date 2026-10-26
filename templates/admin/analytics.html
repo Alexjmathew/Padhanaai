@@ -1,0 +1,111 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Platform Analytics & Usage Trends — PadhanaAI{% endblock %}
+
+{% block admin_content %}
+<div style="margin-bottom:28px;">
+  <h1 style="font-family:var(--font-display); font-size:1.85rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px;">
+    Platform Analytics & Retention Trends
+  </h1>
+  <p style="color:var(--text-muted); font-size:0.92rem;">
+    Comprehensive engagement metrics, study activity cycles, and vector citation volume.
+  </p>
+</div>
+
+<!-- 7-Day Usage Activity Bar Visualization -->
+<div class="card" style="margin-bottom:30px; padding:28px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; flex-wrap:wrap; gap:12px;">
+    <div>
+      <h3 style="font-family:var(--font-display); font-size:1.25rem; font-weight:700;">
+        7-Day Activity Trends
+      </h3>
+      <p style="color:var(--text-muted); font-size:0.86rem;">
+        Daily distribution of document uploads, AI study dialogues, and quiz assessments.
+      </p>
+    </div>
+    <div style="display:flex; gap:16px; font-size:0.84rem; font-weight:600;">
+      <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; background:#10b981; border-radius:2px; display:inline-block;"></span> AI Chats</span>
+      <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; background:#38bdf8; border-radius:2px; display:inline-block;"></span> Docs Uploaded</span>
+      <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; background:#f59e0b; border-radius:2px; display:inline-block;"></span> Quizzes</span>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:14px; align-items:flex-end; min-height:220px; padding-top:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+    {% for day in days_data %}
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <div style="display:flex; align-items:flex-end; gap:4px; height:160px; width:100%; justify-content:center;">
+          <!-- AI chats bar -->
+          <div style="width:14px; height:{{ [(day.ai * 12), 160] | min if day.ai > 0 else 6 }}px; background:#10b981; border-radius:3px 3px 0 0;" title="{{ day.ai }} AI Invocations"></div>
+          <!-- Docs bar -->
+          <div style="width:14px; height:{{ [(day.docs * 20), 160] | min if day.docs > 0 else 4 }}px; background:#38bdf8; border-radius:3px 3px 0 0;" title="{{ day.docs }} Documents"></div>
+          <!-- Quiz bar -->
+          <div style="width:14px; height:{{ [(day.quizzes * 18), 160] | min if day.quizzes > 0 else 4 }}px; background:#f59e0b; border-radius:3px 3px 0 0;" title="{{ day.quizzes }} Quizzes"></div>
+        </div>
+        <div style="font-size:0.75rem; font-family:var(--font-mono); color:var(--text-muted); font-weight:600;">
+          {{ day.date }}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Popular Study Materials Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+  <div style="padding:20px 24px; border-bottom:1px solid var(--border-subtle);">
+    <h3 style="font-family:var(--font-display); font-size:1.2rem; font-weight:700;">
+      High-Yield Academic Materials
+    </h3>
+    <p style="color:var(--text-muted); font-size:0.85rem;">
+      Materials generating the highest citation queries and dialogue engagement across the platform.
+    </p>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Document Title</th>
+          <th>Owner</th>
+          <th>Pages</th>
+          <th>Dialogue Queries</th>
+          <th>Citation Intensity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not popular_docs %}
+          <tr>
+            <td colspan="5" style="text-align:center; padding:36px; color:var(--text-muted);">
+              No active study materials with conversations yet.
+            </td>
+          </tr>
+        {% else %}
+          {% for d in popular_docs %}
+            <tr>
+              <td style="font-weight:700;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                  <span>{{ d.title }}</span>
+                </div>
+              </td>
+              <td style="font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted);">
+                {{ d.owner_email }}
+              </td>
+              <td>{{ d.pages }}</td>
+              <td>
+                <span class="badge" style="background:var(--primary-light); color:var(--primary); font-family:var(--font-mono);">
+                  {{ d.msg_count }} msgs
+                </span>
+              </td>
+              <td>
+                <div style="width:120px; height:6px; background:var(--bg-surface-elevated); border-radius:3px; overflow:hidden;">
+                  <div style="width:{{ [(d.msg_count * 10), 100] | min }}%; height:100%; background:var(--primary);"></div>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
