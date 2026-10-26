@@ -1,0 +1,695 @@
+{% extends "base.html" %}
+
+{% block title %}{{ d.title }} — Study Studio | PadhanaAI{% endblock %}
+{% block wrapper_class %}full-bleed{% endblock %}
+
+{% block body %}
+<!-- Studio Top Bar -->
+<div class="workspace-header">
+  <div class="workspace-title-box">
+    <a href="{{ url_for('dashboard') }}" class="btn alt sm" title="Back to Dashboard">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+      Dashboard
+    </a>
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <h2 style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;" id="docTitleDisplay">
+          {{ d.title }}
+        </h2>
+        <span class="badge {{ 'ready' if d.status=='ready' else 'indexing' }}">
+          {{ d.status | capitalize }}
+        </span>
+        <span class="badge" style="background: var(--bg-surface-elevated); color: var(--text-muted);">
+          {{ d.pages }} pages
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <button class="btn alt sm" onclick="openRenameModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      Rename
+    </button>
+
+    <form method="post" action="{{ url_for('delete', did=d.id) }}" onsubmit="return confirm('Permanently delete {{ d.title }}?');" style="margin: 0;">
+      <button class="btn alt sm danger" type="submit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Delete
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Main Split Workspace Layout -->
+<div class="workspace-layout">
+
+  <!-- ==========================================
+       LEFT PANE: Source Inspector & Page Reader
+       ========================================== -->
+  <aside class="source-inspector" id="sourceInspector">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        Source Inspector
+      </div>
+      <span class="badge" id="currentPageBadge" style="background: var(--primary-light); color: var(--primary);">
+        Page 1 / {{ d.pages }}
+      </span>
+    </div>
+
+    <!-- Page Selector Controls -->
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button class="btn alt sm" id="prevPageBtn" onclick="changePage(-1)" title="Previous Page">
+        &larr;
+      </button>
+      <select id="pageSelect" onchange="loadPage(this.value)" style="padding: 6px 10px; font-size: 0.85rem;">
+        {% for p in range(1, (d.pages or 1) + 1) %}
+          <option value="{{ p }}">Page {{ p }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn alt sm" id="nextPageBtn" onclick="changePage(1)" title="Next Page">
+        &rarr;
+      </button>
+    </div>
+
+    <!-- Page Text Content Display -->
+    <div class="source-page-viewer" id="pageViewer">
+      <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 20px 0;">
+        <div class="spinner" style="margin-bottom: 8px;"></div>
+        <div>Loading page contents...</div>
+      </div>
+    </div>
+
+    <!-- Quick AI Prompts -->
+    <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+      <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-faint); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.05em;">
+        Quick Study Starters
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <button class="prompt-chip" style="text-align: left; border-radius: var(--radius-sm);" onclick="quickAsk('Summarize the core arguments of this document.')">
+          ⚡ Summarize main concepts
+        </button>
+        <button class="prompt-chip" style="text-align: left; border-radius: var(--radius-sm);" onclick="quickAsk('Explain this material simply like I am a beginner.')">
+          🌱 Explain in simple terms
+        </button>
+        <button class="prompt-chip" style="text-align: left; border-radius: var(--radius-sm);" onclick="quickAsk('What are the top 5 definitions or formulas in this chapter?')">
+          🔑 Key definitions & formulas
+        </button>
+        <button class="prompt-chip" style="text-align: left; border-radius: var(--radius-sm);" onclick="switchTab('quiz'); generateQuiz();">
+          🎯 Test me with a quiz
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==========================================
+       RIGHT PANE: AI Learning Studio
+       ========================================== -->
+  <main>
+    <!-- Segmented Tab Controls -->
+    <div class="tab-pills">
+      <button class="tab-pill active" id="tabBtnChat" onclick="switchTab('chat')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        AI Study Chat
+      </button>
+      <button class="tab-pill" id="tabBtnSumm" onclick="switchTab('summ')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Smart Summaries
+      </button>
+      <button class="tab-pill" id="tabBtnQuiz" onclick="switchTab('quiz')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        Interactive Quiz
+      </button>
+    </div>
+
+    <!-- 1. CHAT WORKSPACE -->
+    <div id="tabChat" class="chat-window">
+      <!-- Chat message history -->
+      <div class="chat-messages" id="chatLog">
+        {% if not msgs %}
+          <div style="text-align: center; margin: auto; padding: 40px 20px; color: var(--text-muted);" id="emptyChatPlaceholder">
+            <div style="font-size: 2.5rem; margin-bottom: 10px;">💬✨</div>
+            <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">
+              Ready to Study "{{ d.title }}"
+            </h3>
+            <p style="font-size: 0.9rem; max-width: 420px; margin: 0 auto;">
+              Ask questions about specific chapters, concepts, formulas, or definitions. Every answer cites exact page numbers.
+            </p>
+          </div>
+        {% else %}
+          {% for m in msgs %}
+            <div class="msg-row {{ 'user' if m.role == 'user' else 'assistant' }}">
+              <div class="msg-bubble raw-msg-content" data-role="{{ m.role }}">{{ m.content }}</div>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- Quick Prompt Suggestions Chips -->
+      <div class="prompt-chips">
+        <span style="font-size: 0.75rem; color: var(--text-faint); font-weight: 600; text-transform: uppercase; align-self: center;">Ask:</span>
+        <span class="prompt-chip" onclick="quickAsk('What are the key takeaways from this document?')">Key takeaways</span>
+        <span class="prompt-chip" onclick="quickAsk('List all important equations and what each variable represents.')">Equations & variables</span>
+        <span class="prompt-chip" onclick="quickAsk('Give 3 potential exam questions based on this.')">Exam questions</span>
+      </div>
+
+      <!-- Sticky Input Bar -->
+      <div class="chat-input-bar">
+        <input type="text" id="chatInput" class="chat-input" placeholder="Ask anything about your document... (e.g. 'Explain Section 2')" autocomplete="off">
+        <button class="btn accent" id="sendBtn" onclick="handleSendChat()">
+          <span>Ask</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. SMART SUMMARIES WORKSPACE -->
+    <div id="tabSumm" class="card" style="display: none; box-shadow: var(--shadow-md);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700;">
+            AI Study Notes & Synthesis
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem;">
+            Generate high-yield notes tailored for memory retention and revision.
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn alt sm" id="copySummBtn" onclick="copySummaryText()" style="display: none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy Notes
+          </button>
+          <button class="btn alt sm" id="dlSummBtn" onclick="downloadSummaryText()" style="display: none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download .md
+          </button>
+        </div>
+      </div>
+
+      <!-- Mode Selector -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <label style="border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; cursor: pointer; background: var(--bg-surface-elevated); display: flex; align-items: flex-start; gap: 10px;">
+          <input type="radio" name="summaryType" value="short" checked style="width: auto; margin-top: 3px;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.95rem;">⚡ 5-Sentence Brief</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Quick executive overview</div>
+          </div>
+        </label>
+
+        <label style="border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; cursor: pointer; background: var(--bg-surface-elevated); display: flex; align-items: flex-start; gap: 10px;">
+          <input type="radio" name="summaryType" value="detailed" style="width: auto; margin-top: 3px;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.95rem;">📖 Structured Deep Dive</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">In-depth section breakdown</div>
+          </div>
+        </label>
+
+        <label style="border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; cursor: pointer; background: var(--bg-surface-elevated); display: flex; align-items: flex-start; gap: 10px;">
+          <input type="radio" name="summaryType" value="definitions" style="width: auto; margin-top: 3px;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.95rem;">🔑 Core Terminology</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Key definitions glossary</div>
+          </div>
+        </label>
+
+        <label style="border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; cursor: pointer; background: var(--bg-surface-elevated); display: flex; align-items: flex-start; gap: 10px;">
+          <input type="radio" name="summaryType" value="revision" style="width: auto; margin-top: 3px;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.95rem;">📝 Exam Revision Sheet</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">High-yield bullet points</div>
+          </div>
+        </label>
+      </div>
+
+      <button class="btn accent" id="generateSummaryBtn" onclick="generateSummary()">
+        <span>Generate Summary</span>
+      </button>
+
+      <!-- Summary Output Box -->
+      <div id="summaryOutput" style="margin-top: 24px; display: none; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 24px; line-height: 1.7;">
+      </div>
+    </div>
+
+    <!-- 3. INTERACTIVE QUIZ ARENA -->
+    <div id="tabQuiz" class="card" style="display: none; box-shadow: var(--shadow-md);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700;">
+            Interactive Knowledge Arena
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem;">
+            Test your active recall with dynamically generated multiple-choice challenges.
+          </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="display: flex; gap: 4px; background: var(--bg-surface-elevated); padding: 3px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <button class="tab-pill sm diff-pill" data-diff="Easy" onclick="setQuizDifficulty('Easy', this)" style="padding: 4px 12px; font-size: 0.82rem;">Easy</button>
+            <button class="tab-pill sm diff-pill active" data-diff="Medium" onclick="setQuizDifficulty('Medium', this)" style="padding: 4px 12px; font-size: 0.82rem;">Medium</button>
+            <button class="tab-pill sm diff-pill" data-diff="Hard" onclick="setQuizDifficulty('Hard', this)" style="padding: 4px 12px; font-size: 0.82rem;">Hard</button>
+          </div>
+
+          <button class="btn accent" id="startQuizBtn" onclick="generateQuiz()">
+            <span>Generate Quiz</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Arena Container -->
+      <div id="quizContainer">
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+          <div style="font-size: 2.5rem; margin-bottom: 10px;">🎯</div>
+          <h4 style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 6px;">Ready to test your retention?</h4>
+          <p style="font-size: 0.9rem; max-width: 400px; margin: 0 auto 20px;">
+            Choose a difficulty level above and click <strong>Generate Quiz</strong> to build a 5-question exam with instant scoring.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Rename Modal Dialog -->
+<div id="renameModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+  <div class="card" style="max-width: 440px; width: 90%; padding: 28px;">
+    <h3 style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 12px;">Rename Document</h3>
+    <form method="post" action="{{ url_for('rename', did=d.id) }}">
+      <input type="text" name="title" value="{{ d.title }}" maxlength="120" required style="margin-bottom: 18px;" autofocus>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn alt" onclick="closeRenameModal()">Cancel</button>
+        <button type="submit" class="btn accent">Save Title</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Client Controller Script -->
+<script>
+  const DOC_ID = {{ d.id }};
+  const TOTAL_PAGES = {{ d.pages or 1 }};
+  let currentDifficulty = 'Medium';
+  let activePage = 1;
+  let currentSummaryMarkdown = '';
+
+  // Setup Markdown parser with Highlight.js
+  marked.setOptions({
+    highlight: function(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    },
+    gfm: true,
+    breaks: true
+  });
+
+  // Pre-render existing messages with Markdown
+  document.querySelectorAll('.raw-msg-content').forEach(el => {
+    if (el.dataset.role === 'assistant') {
+      const parsed = renderAssistantText(el.textContent);
+      el.innerHTML = parsed;
+    }
+  });
+
+  // Render assistant text with formatted markdown and citations
+  function renderAssistantText(rawText) {
+    // Replace citation tags like [p.3] or [p. 3] with interactive badges
+    const citedText = rawText.replace(/\[p\.?\s*(\d+)\]/gi, (match, pno) => {
+      return `<button class="cite-badge" onclick="loadPage(${pno})">📄 p.${pno}</button>`;
+    });
+    return marked.parse(citedText);
+  }
+
+  // Tab switching
+  function switchTab(tab) {
+    const tabs = ['chat', 'summ', 'quiz'];
+    tabs.forEach(t => {
+      document.getElementById('tab' + capitalize(t)).style.display = (t === tab) ? 'flex' : 'none';
+      if (t !== 'chat' && t === tab) {
+        document.getElementById('tab' + capitalize(t)).style.display = 'block';
+      }
+      const btn = document.getElementById('tabBtn' + capitalize(t));
+      if (btn) {
+        if (t === tab) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+    });
+  }
+
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // Quick ask helper
+  function quickAsk(prompt) {
+    switchTab('chat');
+    document.getElementById('chatInput').value = prompt;
+    handleSendChat();
+  }
+
+  // ==========================================
+  // PAGE INSPECTOR LOGIC
+  // ==========================================
+  async function loadPage(pageNumber) {
+    pageNumber = parseInt(pageNumber, 10);
+    if (isNaN(pageNumber) || pageNumber < 1) pageNumber = 1;
+    if (pageNumber > TOTAL_PAGES) pageNumber = TOTAL_PAGES;
+
+    activePage = pageNumber;
+    document.getElementById('pageSelect').value = pageNumber;
+    document.getElementById('currentPageBadge').textContent = `Page ${pageNumber} / ${TOTAL_PAGES}`;
+    
+    const viewer = document.getElementById('pageViewer');
+    viewer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;"><div class="spinner" style="margin-bottom:8px;"></div><div>Loading page ' + pageNumber + '...</div></div>';
+    
+    // Highlight flash effect on inspector
+    const inspector = document.getElementById('sourceInspector');
+    inspector.style.borderColor = 'var(--primary)';
+    setTimeout(() => { inspector.style.borderColor = 'var(--border-subtle)'; }, 1000);
+
+    try {
+      const res = await fetch(`/api/doc/${DOC_ID}/page/${pageNumber}`);
+      const data = await res.json();
+      if (data.text && data.text.trim().length > 0) {
+        viewer.textContent = data.text;
+      } else {
+        viewer.innerHTML = '<div style="color:var(--text-faint); text-align:center; padding:20px;"><em>(No extractable text found on page ' + pageNumber + ')</em></div>';
+      }
+    } catch (err) {
+      viewer.innerHTML = '<div style="color:var(--danger); padding:10px;">Could not load page ' + pageNumber + '</div>';
+    }
+  }
+
+  function changePage(delta) {
+    loadPage(activePage + delta);
+  }
+
+  // Initial load of page 1
+  loadPage(1);
+
+  // ==========================================
+  // CHAT WORKSPACE LOGIC
+  // ==========================================
+  const chatInput = document.getElementById('chatInput');
+  const chatLog = document.getElementById('chatLog');
+  const sendBtn = document.getElementById('sendBtn');
+
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendChat();
+    }
+  });
+
+  async function handleSendChat() {
+    const q = chatInput.value.trim();
+    if (!q) return;
+
+    chatInput.value = '';
+    const emptyPlaceholder = document.getElementById('emptyChatPlaceholder');
+    if (emptyPlaceholder) emptyPlaceholder.remove();
+
+    // Append User Message
+    appendMessage('user', q);
+
+    // Append Thinking Assistant Message
+    const aiBubble = appendMessage('assistant', '<div style="display:flex; align-items:center; gap:8px;"><span class="spinner" style="width:16px;height:16px;"></span> Searching vector passages & formulating answer...</div>');
+
+    try {
+      sendBtn.disabled = true;
+      const res = await fetch(`/api/doc/${DOC_ID}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Server error occurred');
+
+      let content = data.answer;
+      if (data.pages && data.pages.length > 0) {
+        content += '\n\n**Sources:** ' + data.pages.map(p => `[p.${p}]`).join(' ');
+      }
+      aiBubble.innerHTML = renderAssistantText(content);
+    } catch (err) {
+      aiBubble.innerHTML = `<div style="color:var(--danger);">⚠️ ${err.message}</div>`;
+    } finally {
+      sendBtn.disabled = false;
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+  }
+
+  function appendMessage(role, htmlOrText) {
+    const row = document.createElement('div');
+    row.className = `msg-row ${role}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    if (role === 'user') {
+      bubble.textContent = htmlOrText;
+    } else {
+      bubble.innerHTML = htmlOrText;
+    }
+    row.appendChild(bubble);
+    chatLog.appendChild(row);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return bubble;
+  }
+
+  // ==========================================
+  // SUMMARIZER WORKSPACE LOGIC
+  // ==========================================
+  async function generateSummary() {
+    const selected = document.querySelector('input[name="summaryType"]:checked').value;
+    const btn = document.getElementById('generateSummaryBtn');
+    const out = document.getElementById('summaryOutput');
+    const copyBtn = document.getElementById('copySummBtn');
+    const dlBtn = document.getElementById('dlSummBtn');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;margin-right:8px;"></span> Synthesizing document notes...';
+    out.style.display = 'block';
+    out.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:30px;"><div class="spinner" style="width:30px;height:30px;margin-bottom:12px;"></div><div>PadhanaAI is synthesizing key concepts across pages...</div></div>';
+
+    try {
+      const res = await fetch(`/api/doc/${DOC_ID}/summary`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: selected })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate summary');
+
+      currentSummaryMarkdown = data.text;
+      out.innerHTML = renderAssistantText(data.text);
+      copyBtn.style.display = 'inline-flex';
+      dlBtn.style.display = 'inline-flex';
+    } catch (err) {
+      out.innerHTML = `<div style="color:var(--danger);">⚠️ ${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>Generate Summary</span>';
+    }
+  }
+
+  function copySummaryText() {
+    if (!currentSummaryMarkdown) return;
+    navigator.clipboard.writeText(currentSummaryMarkdown);
+    const btn = document.getElementById('copySummBtn');
+    btn.innerHTML = '✓ Copied to clipboard!';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy Notes';
+    }, 2000);
+  }
+
+  function downloadSummaryText() {
+    if (!currentSummaryMarkdown) return;
+    const blob = new Blob([currentSummaryMarkdown], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Summary_${DOC_ID}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ==========================================
+  // INTERACTIVE QUIZ ARENA LOGIC
+  // ==========================================
+  function setQuizDifficulty(diff, btn) {
+    currentDifficulty = diff;
+    document.querySelectorAll('.diff-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  async function generateQuiz() {
+    const qz = document.getElementById('quizContainer');
+    const startBtn = document.getElementById('startQuizBtn');
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<span class="spinner" style="width:16px;height:16px;margin-right:6px;"></span> Generating...';
+
+    qz.innerHTML = `
+      <div style="text-align:center; padding:50px 20px;">
+        <div class="spinner" style="width:36px;height:36px;margin-bottom:14px; border-width:3px; border-top-color:var(--primary);"></div>
+        <h4 style="font-size:1.15rem; color:var(--text-main); margin-bottom:6px;">Analyzing Document Knowledge...</h4>
+        <p style="color:var(--text-muted); font-size:0.9rem;">Formulating ${currentDifficulty}-difficulty questions and verified explanations...</p>
+      </div>
+    `;
+
+    try {
+      const res = await fetch(`/api/doc/${DOC_ID}/quiz`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ difficulty: currentDifficulty })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate quiz');
+
+      renderQuizUI(data.quiz);
+    } catch (err) {
+      qz.innerHTML = `<div class="card" style="border-color:var(--danger); color:var(--danger); text-align:center; padding:30px;">⚠️ ${err.message}</div>`;
+    } finally {
+      startBtn.disabled = false;
+      startBtn.innerHTML = '<span>Generate Quiz</span>';
+    }
+  }
+
+  function renderQuizUI(quiz) {
+    const qz = document.getElementById('quizContainer');
+    qz.innerHTML = '';
+
+    let score = 0;
+    let answeredCount = 0;
+    const totalQuestions = quiz.length;
+
+    // Header with Progress & Score tracker
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border-subtle);';
+    header.innerHTML = `
+      <div style="font-weight:700; font-size:0.95rem;">
+        ${totalQuestions} Questions · <span style="color:var(--primary);">${currentDifficulty}</span>
+      </div>
+      <div id="liveScoreTracker" style="font-weight:700; font-size:1rem; color:var(--accent);">
+        Score: 0 / ${totalQuestions}
+      </div>
+    `;
+    qz.appendChild(header);
+
+    quiz.forEach((q, qIndex) => {
+      const card = document.createElement('div');
+      card.className = 'quiz-card';
+      
+      const qTitle = document.createElement('div');
+      qTitle.className = 'quiz-question';
+      qTitle.innerHTML = `<span style="color:var(--primary); font-family:var(--font-display); font-size:1rem; margin-right:6px;">Q${qIndex + 1}.</span> ${escapeHtml(q.q)}`;
+      card.appendChild(qTitle);
+
+      const optionsBox = document.createElement('div');
+      const optionLetters = ['A', 'B', 'C', 'D'];
+      const optionButtons = [];
+
+      q.options.forEach((opt, optIndex) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option-btn';
+        btn.innerHTML = `
+          <span style="width:24px; height:24px; border-radius:50%; background:var(--bg-surface); border:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; flex-shrink:0;">
+            ${optionLetters[optIndex]}
+          </span>
+          <span>${escapeHtml(opt)}</span>
+        `;
+
+        btn.onclick = () => {
+          if (card.dataset.answered) return;
+          card.dataset.answered = 'true';
+          answeredCount++;
+
+          const isCorrect = (optIndex === q.answer);
+          if (isCorrect) {
+            score++;
+            btn.classList.add('correct');
+            btn.innerHTML += ' <span style="margin-left:auto; font-size:1.1rem;">✅</span>';
+          } else {
+            btn.classList.add('wrong');
+            btn.innerHTML += ' <span style="margin-left:auto; font-size:1.1rem;">❌</span>';
+            // Highlight the correct one
+            if (optionButtons[q.answer]) {
+              optionButtons[q.answer].classList.add('correct');
+            }
+          }
+
+          // Disable remaining buttons
+          optionButtons.forEach(b => b.disabled = true);
+
+          // Reveal explanation
+          const exp = document.createElement('div');
+          exp.className = 'quiz-explanation';
+          exp.innerHTML = `
+            <strong>${isCorrect ? '✅ Well done!' : '❌ Incorrect.'}</strong> ${escapeHtml(q.explanation || '')}
+          `;
+          card.appendChild(exp);
+
+          // Update Score Tracker
+          document.getElementById('liveScoreTracker').textContent = `Score: ${score} / ${totalQuestions}`;
+
+          // If all answered, show fireworks & celebration card
+          if (answeredCount === totalQuestions) {
+            showQuizCompleted(score, totalQuestions);
+          }
+        };
+
+        optionsBox.appendChild(btn);
+        optionButtons.push(btn);
+      });
+
+      card.appendChild(optionsBox);
+      qz.appendChild(card);
+    });
+  }
+
+  function showQuizCompleted(score, total) {
+    const qz = document.getElementById('quizContainer');
+    const pct = Math.round((score / total) * 100);
+
+    // Launch confetti celebration
+    if (score >= total * 0.6 && window.confetti) {
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.6 }
+      });
+    }
+
+    const finale = document.createElement('div');
+    finale.className = 'card';
+    finale.style.cssText = 'text-align:center; padding:36px; border-color:var(--primary); background:linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-surface-elevated) 100%); margin-top:20px;';
+    finale.innerHTML = `
+      <div style="font-size:2.8rem; margin-bottom:10px;">${score === total ? '🏆' : (score >= total * 0.6 ? '🌟' : '📚')}</div>
+      <h3 style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; margin-bottom:8px;">
+        Quiz Completed: ${score} / ${total} (${pct}%)
+      </h3>
+      <p style="color:var(--text-muted); font-size:0.92rem; max-width:440px; margin:0 auto 20px;">
+        ${score === total ? 'Flawless mastery! You answered every question correctly.' : (score >= total * 0.6 ? 'Great retention! A quick review of cited pages will get you to 100%.' : 'Good effort! Review the source pages and try another quiz.')}
+      </p>
+      <div style="display:flex; justify-content:center; gap:12px;">
+        <button class="btn accent" onclick="generateQuiz()">Try Another Quiz</button>
+        <button class="btn alt" onclick="switchTab('chat')">Ask Follow-up Questions</button>
+      </div>
+    `;
+    qz.appendChild(finale);
+    finale.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m]);
+  }
+
+  // Rename modal handlers
+  function openRenameModal() {
+    document.getElementById('renameModal').style.display = 'flex';
+  }
+  function closeRenameModal() {
+    document.getElementById('renameModal').style.display = 'none';
+  }
+</script>
+{% endblock %}

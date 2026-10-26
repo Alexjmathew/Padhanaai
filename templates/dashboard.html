@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — PadhanaAI{% endblock %}
+
+{% block body %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+  <div>
+    <h1 style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px;">
+      Welcome back, {{ (current_user.email.split('@')[0] if current_user and current_user.email else 'Student') }} 👋
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+      Your indexed documents and AI study companions.
+    </p>
+  </div>
+</div>
+
+<!-- Stats Strip -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-icon">📚</div>
+    <div>
+      <div class="stat-number">{{ docs|length }}</div>
+      <div class="stat-label">Total Documents</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="color:var(--accent);">📄</div>
+    <div>
+      <div class="stat-number">{{ total_pages if total_pages is defined else docs|sum(attribute='pages') }}</div>
+      <div class="stat-label">Pages Indexed</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="color:#10b981;">⚡</div>
+    <div>
+      <div class="stat-number" style="font-size:1.15rem; color:#10b981; display:flex; align-items:center; gap:6px;">
+        <span style="width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981; display:inline-block;"></span>
+        RAG Active
+      </div>
+      <div class="stat-label">Nebius AI Engine</div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Dropzone Card -->
+<form class="dropzone-card" method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data" id="uploadForm">
+  <input type="file" name="file" id="pdfFileInput" accept="application/pdf" required style="display: none;">
+  
+  <div id="dropzoneDefault">
+    <div class="dropzone-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+    </div>
+    <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;">
+      Upload Document or Drag PDF Here
+    </h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">
+      Supports textbooks, lecture notes, syllabus, and papers (up to 20 MB).
+    </p>
+    
+    <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <button type="button" class="btn alt" onclick="document.getElementById('pdfFileInput').click()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+        Browse Files
+      </button>
+      <div id="selectedFileInfo" style="display:none; align-items:center; gap:8px; font-size:0.9rem; color:var(--primary); font-weight:600;">
+        <span id="fileNameDisplay"></span>
+        <button type="submit" class="btn sm accent" id="uploadBtn">Start Indexing</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State (hidden initially) -->
+  <div id="dropzoneLoading" style="display: none; padding: 20px 0;">
+    <div class="spinner" style="width: 38px; height: 38px; border-width: 3px; border-top-color: var(--primary); margin-bottom: 16px;"></div>
+    <h3 style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; margin-bottom: 6px;">
+      Extracting & Embedding Vector Chunks...
+    </h3>
+    <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 480px; margin: 0 auto;">
+      PadhanaAI is segmenting your document into semantic passages and computing embeddings for instant citation retrieval.
+    </p>
+  </div>
+</form>
+
+<!-- Search and Filter Bar -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; gap: 16px; flex-wrap: wrap;">
+  <div style="position: relative; max-width: 380px; width: 100%;">
+    <input type="text" id="docSearch" placeholder="Filter documents by title..." style="padding-left: 38px;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </div>
+  <div style="font-size: 0.88rem; color: var(--text-muted); font-weight: 500;" id="docCountBadge">
+    {{ docs|length }} document{{ 's' if docs|length != 1 else '' }} in library
+  </div>
+</div>
+
+<!-- Documents Grid -->
+{% if not docs %}
+  <div class="card" style="text-align: center; padding: 60px 20px;">
+    <div style="font-size: 3rem; margin-bottom: 12px;">📂</div>
+    <h3 style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;">
+      No Documents Yet
+    </h3>
+    <p style="color: var(--text-muted); max-width: 440px; margin: 0 auto 24px; font-size: 0.92rem;">
+      Upload your first PDF textbook, paper, or lecture slide deck above to unlock instant AI chat and quizzes!
+    </p>
+    <button class="btn accent" onclick="document.getElementById('pdfFileInput').click()">
+      Upload Your First PDF
+    </button>
+  </div>
+{% else %}
+  <div class="doc-grid" id="docGrid">
+    {% for d in docs %}
+      <div class="doc-card" data-title="{{ d.title | lower }}">
+        <div>
+          <div class="doc-card-top">
+            <div class="doc-pdf-icon">
+              PDF
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <a href="{{ url_for('doc', did=d.id) }}" class="doc-card-title" title="{{ d.title }}">
+                {{ d.title }}
+              </a>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                {{ d.pages }} pages
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <span class="badge {{ 'ready' if d.status=='ready' else ('error' if d.status=='error' else 'indexing') }}">
+              {{ d.status | capitalize }}
+            </span>
+          </div>
+
+          <div class="doc-card-footer">
+            <a class="btn sm" href="{{ url_for('doc', did=d.id) }}">
+              Study Room
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
+            </a>
+
+            <!-- Dropdown / Quick Delete Form -->
+            <form method="post" action="{{ url_for('delete', did=d.id) }}" onsubmit="return confirm('Permanently delete {{ d.title }} and all study history?');" style="margin: 0;">
+              <button class="btn alt sm danger" type="submit" title="Delete Document">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- Dropzone & Filter Script -->
+<script>
+  const dropzone = document.getElementById('uploadForm');
+  const fileInput = document.getElementById('pdfFileInput');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+  const selectedFileInfo = document.getElementById('selectedFileInfo');
+  const dropzoneDefault = document.getElementById('dropzoneDefault');
+  const dropzoneLoading = document.getElementById('dropzoneLoading');
+
+  if (dropzone && fileInput) {
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect();
+      }
+    });
+
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect() {
+      if (fileInput.files.length) {
+        const file = fileInput.files[0];
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        fileNameDisplay.textContent = `📄 ${file.name} (${sizeMb} MB)`;
+        selectedFileInfo.style.display = 'inline-flex';
+      }
+    }
+
+    dropzone.addEventListener('submit', () => {
+      dropzoneDefault.style.display = 'none';
+      dropzoneLoading.style.display = 'block';
+    });
+  }
+
+  // Client-side instant document search filter
+  const docSearch = document.getElementById('docSearch');
+  const docGrid = document.getElementById('docGrid');
+  const countBadge = document.getElementById('docCountBadge');
+
+  if (docSearch && docGrid) {
+    docSearch.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const cards = docGrid.querySelectorAll('.doc-card');
+      let visible = 0;
+      cards.forEach(card => {
+        const title = card.getAttribute('data-title') || '';
+        const match = title.includes(q);
+        card.style.display = match ? 'flex' : 'none';
+        if (match) visible++;
+      });
+      if (countBadge) {
+        countBadge.textContent = `Showing ${visible} document${visible !== 1 ? 's' : ''}`;
+      }
+    });
+  }
+</script>
+{% endblock %}
