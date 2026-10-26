@@ -1,0 +1,6 @@
+flask
+pypdf
+numpy
+openai
+python-dotenv
+gunicorn
