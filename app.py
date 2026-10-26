@@ -16,8 +16,11 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax"
 )
-os.makedirs("data/uploads", exist_ok=True)
-os.makedirs("data/backups", exist_ok=True)
+from db import get_db as db, close_db, DB_PATH, DATA_DIR, BACKUP_DIR
+app.teardown_appcontext(close_db)
+
+UPLOAD_FOLDER = os.path.join(DATA_DIR, "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, email TEXT UNIQUE, pw TEXT, created REAL);
@@ -28,9 +31,6 @@ CREATE TABLE IF NOT EXISTS msgs(id INTEGER PRIMARY KEY, doc_id INT, role TEXT, c
 CREATE TABLE IF NOT EXISTS quizzes(id INTEGER PRIMARY KEY, doc_id INT, data TEXT, created REAL);
 CREATE TABLE IF NOT EXISTS usage(id INTEGER PRIMARY KEY, user_id INT, kind TEXT, created REAL);
 """
-
-from db import get_db as db, close_db, DB_PATH
-app.teardown_appcontext(close_db)
 
 # Initialize base schema and Enterprise RBAC tables
 with sqlite3.connect(DB_PATH) as _c:

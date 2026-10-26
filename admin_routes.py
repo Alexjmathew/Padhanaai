@@ -8,7 +8,7 @@ import json
 import time
 import shutil
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_file
-from db import get_db as db
+from db import get_db as db, DB_PATH, BACKUP_DIR
 import rbac
 from rbac import (
     permission_required, role_required, has_permission, has_role,
@@ -548,8 +548,8 @@ def backups_view():
     conn = db()
     snapshots = conn.execute("SELECT * FROM backup_snapshots ORDER BY created_at DESC").fetchall()
     db_size_mb = 0
-    if os.path.exists("data/app.db"):
-        db_size_mb = round(os.path.getsize("data/app.db") / (1024 * 1024), 2)
+    if os.path.exists(DB_PATH):
+        db_size_mb = round(os.path.getsize(DB_PATH) / (1024 * 1024), 2)
 
     return render_template(
         "admin/backups.html",
@@ -561,12 +561,12 @@ def backups_view():
 @admin_bp.route("/backups/create", methods=["POST"])
 @permission_required("backups.manage")
 def create_backup():
-    os.makedirs("data/backups", exist_ok=True)
+    os.makedirs(BACKUP_DIR, exist_ok=True)
     snapshot_name = f"backup_snapshot_{time.strftime('%Y%m%d_%H%M%S')}.db"
-    dest_path = os.path.join("data/backups", snapshot_name)
+    dest_path = os.path.join(BACKUP_DIR, snapshot_name)
 
     try:
-        shutil.copyfile("data/app.db", dest_path)
+        shutil.copyfile(DB_PATH, dest_path)
         size_bytes = os.path.getsize(dest_path)
         conn = db()
         conn.execute("""
@@ -588,7 +588,7 @@ def create_backup():
 def download_backup(name):
     # Sanitize file name to avoid directory traversal
     clean_name = os.path.basename(name)
-    path = os.path.join("data/backups", clean_name)
+    path = os.path.join(BACKUP_DIR, clean_name)
     if not os.path.exists(path):
         abort(404)
     log_audit("backup_downloaded", target_type="backup", target_id=clean_name)
