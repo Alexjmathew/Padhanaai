@@ -1,60 +1,74 @@
 {% extends "base.html" %}
 
-{% block title %}PadhanaAI — Transform PDFs into Interactive AI Study Workspaces{% endblock %}
+{% block title %}PadhanaAI — Thoughtful AI Reading & Study Sanctum{% endblock %}
 
 {% block body %}
-<!-- Hero Section -->
+<!-- 3D Hero Section -->
 <section class="hero-section">
   <div class="hero-pill">
-    <span>✨</span> Next-Gen RAG Study Engine · Powered by Nebius AI
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+    </svg>
+    <span>Thoughtful Reading & Comprehension Sanctum</span>
   </div>
+  
   <h1 class="hero-title">
-    Read, Ask & Master.<br>
+    Read Deeply. Ask Freely.<br>
     <span class="gradient-text">Anchored to Every Page.</span>
   </h1>
+  
   <p class="hero-desc">
-    Upload textbooks, lecture slides, research papers, or syllabus notes. Chat in real-time with verified page citations, generate smart exam summaries, and test your retention with automated quizzes.
+    Transform textbooks, lecture notes, research manuscripts, and syllabus guides into an interactive dialogue space. Verified citations on every response, smart synthesis notes, and active recall assessments designed for genuine long-term mastery.
   </p>
+  
   <div class="hero-cta-group">
     <a class="btn lg accent" href="{{ url_for('signup') }}">
-      Start Learning Free
+      <span>Begin Studying Free</span>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
     </a>
     <a class="btn lg alt" href="#demo">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
-      Try Interactive Demo
+      <span>Explore Live Preview</span>
     </a>
   </div>
 </section>
 
-<!-- Interactive Live Demo Card -->
-<section id="demo" class="demo-preview-card">
+<!-- 3D Interactive Live Demo Preview Card -->
+<section id="demo" class="demo-preview-card tilt-card" style="margin-bottom: 90px;">
   <div class="demo-header">
     <div class="window-dots">
       <span></span><span></span><span></span>
     </div>
-    <div style="font-size: 0.84rem; font-weight: 600; color: var(--text-muted); display:flex; align-items:center; gap:6px;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-      Introduction_to_Deep_Learning_Ch4.pdf
+    <div style="font-size: 0.84rem; font-weight: 600; color: var(--text-muted); display:flex; align-items:center; gap:8px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+      <span>Principles_of_Neural_Computation_Ch4.pdf</span>
     </div>
-    <span class="badge ready">Ready</span>
+    <span class="badge ready">
+      <span style="width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block; margin-right:4px;"></span>
+      Indexed & Ready
+    </span>
   </div>
 
   <div class="demo-body">
     <!-- Left: Simulated Document Passage -->
     <div class="demo-left">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <span style="font-weight:700; color:var(--text-main); font-size:0.82rem; text-transform:uppercase; letter-spacing:0.05em;">Source Inspector</span>
-        <span class="badge" style="background:var(--bg-surface-elevated); color:var(--text-muted);">Page 14</span>
+        <span style="font-weight:700; color:var(--text-main); font-size:0.82rem; text-transform:uppercase; letter-spacing:0.06em; display:flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          Source Inspector
+        </span>
+        <span class="badge" style="background:var(--bg-surface-elevated); color:var(--text-muted); font-family:var(--font-mono); font-size:0.75rem;">Page 14</span>
       </div>
-      <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:14px; font-size:0.84rem; line-height:1.6; color:var(--text-muted);">
-        <p><strong>Section 4.3: Stochastic Gradient Descent</strong></p>
-        <p style="margin-top:8px;">
-          Rather than computing the gradient over the entire dataset $\mathcal{D}$, SGD samples a mini-batch of size $B$ at each iteration. This drastically reduces per-iteration computational complexity from $\mathcal{O}(N)$ to $\mathcal{O}(B)$ while introducing beneficial noise that helps escape saddle points...
+      <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:16px; font-size:0.85rem; line-height:1.65; color:var(--text-muted); border-left:3px solid var(--primary);">
+        <p style="color:var(--text-main); font-weight:600; margin-bottom:6px;">Section 4.3: Stochastic Gradient Descent</p>
+        <p>
+          Rather than computing the gradient over the entire dataset, SGD samples a mini-batch of size B at each iteration. This drastically reduces per-iteration computational complexity while introducing beneficial exploration variance that helps escape local saddle points...
         </p>
       </div>
-      <div style="margin-top:16px; font-size:0.8rem; color:var(--text-faint);">
-        💡 <em>PadhanaAI embeds each chunk into high-dimensional vector space for sub-millisecond retrieval.</em>
+      <div style="margin-top:14px; font-size:0.8rem; color:var(--text-faint); display:flex; align-items:center; gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <span>Vector embeddings enable sub-millisecond retrieval grounded to specific pages.</span>
       </div>
     </div>
 
@@ -69,16 +83,22 @@
         </div>
         <!-- AI Response -->
         <div class="msg-row assistant">
-          <div class="msg-bubble" style="background:var(--bg-surface-elevated); font-size:0.88rem; padding:12px 16px;">
-            <p>According to your document, SGD uses mini-batches for two core advantages:</p>
-            <ul style="margin:6px 0 6px 18px;">
-              <li><strong>Computational efficiency:</strong> Reduces per-step cost from $\mathcal{O}(N)$ to $\mathcal{O}(B)$.</li>
-              <li><strong>Optimization dynamics:</strong> Mini-batch noise helps the optimizer navigate past saddle points.</li>
+          <div class="msg-bubble" style="background:var(--bg-surface-elevated); font-size:0.88rem; padding:14px 16px;">
+            <p style="margin-bottom:8px;">According to your document, SGD uses mini-batches for two core architectural advantages:</p>
+            <ul style="margin:6px 0 8px 18px; line-height:1.6;">
+              <li><strong>Computational efficiency:</strong> Reduces per-step cost from O(N) over entire dataset to O(B) per mini-batch.</li>
+              <li><strong>Optimization dynamics:</strong> The stochastic noise naturally helps the model escape high-dimensional saddle points.</li>
             </ul>
-            <div style="margin-top:8px; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:0.75rem; color:var(--text-faint); font-weight:600;">Verified citations:</span>
-              <span class="cite-badge">p.14</span>
-              <span class="cite-badge">p.17</span>
+            <div style="margin-top:10px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span style="font-size:0.75rem; color:var(--text-faint); font-weight:600;">Page citations:</span>
+              <span class="cite-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                p. 14
+              </span>
+              <span class="cite-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                p. 17
+              </span>
             </div>
           </div>
         </div>
@@ -86,11 +106,11 @@
 
       <!-- Quick interactive trial prompts -->
       <div>
-        <div style="font-size:0.75rem; color:var(--text-faint); margin-bottom:6px; font-weight:600; text-transform:uppercase;">Try asking:</div>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <span class="prompt-chip" onclick="demoAsk(this)">Explain backpropagation in 2 sentences</span>
-          <span class="prompt-chip" onclick="demoAsk(this)">Generate 3 practice questions</span>
-          <span class="prompt-chip" onclick="demoAsk(this)">Create revision cheat sheet</span>
+        <div style="font-size:0.75rem; color:var(--text-faint); margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Try inquiring:</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="prompt-chip" onclick="demoAsk(this)">Explain backpropagation simply</button>
+          <button type="button" class="prompt-chip" onclick="demoAsk(this)">Generate 3 practice questions</button>
+          <button type="button" class="prompt-chip" onclick="demoAsk(this)">Create revision cheat sheet</button>
         </div>
       </div>
     </div>
@@ -98,86 +118,132 @@
 </section>
 
 <!-- Feature Grid Section -->
-<section id="features" style="margin-bottom:80px;">
-  <div style="text-align:center; max-width:600px; margin:0 auto 40px;">
-    <h2 style="font-family:var(--font-display); font-size:2rem; font-weight:800; margin-bottom:10px;">
-      Built for Serious Students & Researchers
+<section id="features" style="margin-bottom: 90px;">
+  <div style="text-align:center; max-width:640px; margin:0 auto 48px;">
+    <h2 style="font-family:var(--font-display); font-size:2.2rem; font-weight:800; margin-bottom:12px; letter-spacing:-0.02em;">
+      Engineered for Academic Rigor & Clarity
     </h2>
-    <p style="color:var(--text-muted); font-size:1rem;">
-      Every feature is designed to cut study time in half while deepening comprehension.
+    <p style="color:var(--text-muted); font-size:1.02rem; line-height:1.6;">
+      Every interaction is calibrated to save cognitive bandwidth, eliminate hallucinations, and deepen understanding.
     </p>
   </div>
 
   <div class="features-grid">
     <!-- Feature 1 -->
-    <div class="feature-card">
-      <div class="feature-icon-wrapper">💬</div>
-      <h3 class="feature-title">Grounded RAG Chat</h3>
+    <div class="feature-card tilt-card">
+      <div class="feature-icon-wrapper">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <h3 class="feature-title">Grounded Citation Dialogue</h3>
       <p class="feature-desc">
-        Chat directly with your notes. Every answer references exact page numbers so you can verify facts and never rely on AI hallucinations.
+        Ask complex questions and receive responses with clickable page references. Cross-examine the original text instantly with the built-in source viewer.
       </p>
     </div>
 
     <!-- Feature 2 -->
-    <div class="feature-card">
-      <div class="feature-icon-wrapper" style="background:var(--accent-light); color:var(--accent);">📝</div>
-      <h3 class="feature-title">Smart Summaries</h3>
+    <div class="feature-card tilt-card">
+      <div class="feature-icon-wrapper" style="background:var(--accent-light); color:var(--accent);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      </div>
+      <h3 class="feature-title">Smart Study Synthesis</h3>
       <p class="feature-desc">
-        Choose between 5-sentence executive overviews, comprehensive structured breakdowns, key vocabulary lists, or exam revision cheat sheets.
+        Generate executive overviews, comprehensive structured breakdowns, key terminology glossaries, and exam revision cheat sheets with one click.
       </p>
     </div>
 
     <!-- Feature 3 -->
-    <div class="feature-card">
-      <div class="feature-icon-wrapper">🎯</div>
-      <h3 class="feature-title">Adaptive AI Quizzes</h3>
+    <div class="feature-card tilt-card">
+      <div class="feature-icon-wrapper">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h3 class="feature-title">Active Recall Quizzes</h3>
       <p class="feature-desc">
-        Generate custom multiple-choice quizzes on the fly with Easy, Medium, or Hard difficulty. Get real-time scoring and comprehensive rationales.
+        Strengthen your memory with custom multiple-choice assessments calibrated to Easy, Medium, or Hard difficulty, complete with full rationales.
       </p>
     </div>
 
     <!-- Feature 4 -->
-    <div class="feature-card">
-      <div class="feature-icon-wrapper" style="background:rgba(59, 130, 246, 0.12); color:#3b82f6;">🔒</div>
-      <h3 class="feature-title">Zero-Leak Privacy</h3>
+    <div class="feature-card tilt-card">
+      <div class="feature-icon-wrapper" style="background:rgba(59, 130, 246, 0.12); color:#38bdf8;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <h3 class="feature-title">Private & Sovereign</h3>
       <p class="feature-desc">
-        Your documents and vector embeddings are stored strictly in your private database. When you delete a document, all text and vectors are wiped clean.
+        Your documents and vector indexes remain strictly confidential in your private database. When you delete a document, all text and embeddings are purged.
       </p>
     </div>
   </div>
 </section>
 
-<!-- Workflow Steps -->
-<section style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-lg); padding:50px 30px; text-align:center; margin-bottom:80px;">
-  <h2 style="font-family:var(--font-display); font-size:1.8rem; font-weight:800; margin-bottom:30px;">
-    From PDF to Mastery in 3 Simple Steps
+<!-- 3D Guided Workflow Journey -->
+<section class="card tilt-card" style="padding: 56px 36px; text-align: center; margin-bottom: 90px; background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-surface-elevated) 100%);">
+  <h2 style="font-family:var(--font-display); font-size:2rem; font-weight:800; margin-bottom:12px; letter-spacing:-0.02em;">
+    From Document to Deep Retention in 3 Steps
   </h2>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:24px; max-width:960px; margin:0 auto; text-align:left;">
-    <div style="background:var(--bg-surface-elevated); padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-display); font-weight:800; font-size:1.8rem; color:var(--primary); margin-bottom:8px;">01</div>
-      <h4 style="font-size:1.1rem; margin-bottom:8px;">Upload Your Document</h4>
-      <p style="color:var(--text-muted); font-size:0.9rem;">Drop any textbook, syllabus, or lecture PDF up to 20 MB.</p>
+  <p style="color:var(--text-muted); font-size:1rem; max-width:540px; margin:0 auto 40px;">
+    An intuitive, human-centered study routine that respects your focus.
+  </p>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:24px; max-width:980px; margin:0 auto; text-align:left;">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <h4 style="font-size:1.15rem; font-weight:700; margin-bottom:8px;">Add Your Reading Material</h4>
+      <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+        Upload your textbook chapter, slide deck, research paper, or syllabus in standard PDF format.
+      </p>
     </div>
-    <div style="background:var(--bg-surface-elevated); padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-display); font-weight:800; font-size:1.8rem; color:var(--accent); margin-bottom:8px;">02</div>
-      <h4 style="font-size:1.1rem; margin-bottom:8px;">Automatic Indexing</h4>
-      <p style="color:var(--text-muted); font-size:0.9rem;">AI breaks the text into semantic chunks and creates fast vector embeddings.</p>
+    
+    <div class="step-card">
+      <div class="step-num" style="color:var(--accent);">02</div>
+      <h4 style="font-size:1.15rem; font-weight:700; margin-bottom:8px;">Semantic Deep Indexing</h4>
+      <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+        The system analyzes layout, segments passages, and computes high-dimensional embeddings for instantaneous recall.
+      </p>
     </div>
-    <div style="background:var(--bg-surface-elevated); padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-display); font-weight:800; font-size:1.8rem; color:var(--primary); margin-bottom:8px;">03</div>
-      <h4 style="font-size:1.1rem; margin-bottom:8px;">Chat, Summarize & Test</h4>
-      <p style="color:var(--text-muted); font-size:0.9rem;">Ask tough questions, get cited answers, and test yourself before exam day.</p>
+    
+    <div class="step-card">
+      <div class="step-num" style="color:var(--primary);">03</div>
+      <h4 style="font-size:1.15rem; font-weight:700; margin-bottom:8px;">Inquire, Synthesize & Test</h4>
+      <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+        Have a conversation with your notes, export executive summaries, and take targeted quizzes before exams.
+      </p>
     </div>
   </div>
-  <div style="margin-top:40px;">
-    <a class="btn lg accent" href="{{ url_for('signup') }}">Get Started Now — It's Free</a>
+
+  <div style="margin-top:44px;">
+    <a class="btn lg accent" href="{{ url_for('signup') }}">
+      <span>Start Your Study Session</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
+    </a>
   </div>
 </section>
 
 <!-- Footer -->
-<footer style="text-align:center; padding:30px 0; border-top:1px solid var(--border-subtle); color:var(--text-muted); font-size:0.88rem;">
-  <p style="margin-bottom:8px;">📖✨ <strong>PadhanaAI</strong> — Empowering learners worldwide with grounded artificial intelligence.</p>
-  <p style="font-size:0.8rem; color:var(--text-faint);">All uploaded documents are processed securely and deleted upon request.</p>
+<footer style="text-align:center; padding:40px 0; border-top:1px solid var(--border-subtle); color:var(--text-muted); font-size:0.9rem;">
+  <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>
+    <strong>PadhanaAI</strong>
+    <span>— Human-centered academic study intelligence</span>
+  </div>
+  <p style="font-size:0.82rem; color:var(--text-faint);">All uploaded materials are processed with strict isolation and deleted upon request.</p>
 </footer>
 
 <script>
@@ -186,14 +252,14 @@
     const userMsg = document.querySelector('.demo-right .msg-row.user .msg-bubble');
     const aiMsg = document.querySelector('.demo-right .msg-row.assistant .msg-bubble');
     userMsg.textContent = text;
-    aiMsg.innerHTML = '<span class="spinner" style="width:14px;height:14px;margin-right:6px;"></span> Searching vector embeddings...';
+    aiMsg.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><span class="spinner" style="width:14px;height:14px;"></span> Searching vector passages...</div>';
     setTimeout(() => {
       if (text.includes('backpropagation')) {
-        aiMsg.innerHTML = '<p>Backpropagation computes the gradient of the loss function with respect to weights using the chain rule. It propagates the error backwards through layers to update weights efficiently.</p><div style="margin-top:8px;"><span class="cite-badge">p.22</span> <span class="cite-badge">p.24</span></div>';
+        aiMsg.innerHTML = '<p style="margin-bottom:8px;">Backpropagation calculates the gradient of the loss function with respect to each model weight using the mathematical chain rule. It propagates error backwards through layers to calibrate weights efficiently.</p><div style="margin-top:8px;display:flex;gap:6px;"><span class="cite-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg> p. 22</span> <span class="cite-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg> p. 24</span></div>';
       } else if (text.includes('practice questions')) {
-        aiMsg.innerHTML = '<p><strong>Practice Question:</strong></p><p>What is the primary computational benefit of mini-batch gradient descent?</p><p style="color:var(--text-muted); font-size:0.85rem;">[A] Zero variance &nbsp; [B] $\\mathcal{O}(B)$ cost per iteration &nbsp; [C] Convex convergence guarantee</p><div style="margin-top:8px;"><span class="cite-badge">p.14</span></div>';
+        aiMsg.innerHTML = '<p style="margin-bottom:8px;"><strong>Practice Assessment Question:</strong></p><p>What is the fundamental computational advantage of mini-batch gradient descent compared to batch gradient descent?</p><p style="color:var(--text-muted); font-size:0.85rem; margin-top:6px;">[A] Zero variance &nbsp; [B] Constant O(B) step cost &nbsp; [C] Guaranteed convex loss</p><div style="margin-top:8px;"><span class="cite-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg> p. 14</span></div>';
       } else {
-        aiMsg.innerHTML = '<p><strong>Revision Cheat Sheet:</strong></p><ul style="margin:4px 0 4px 18px;"><li><strong>SGD:</strong> Mini-batch sampling reduces compute.</li><li><strong>Learning Rate:</strong> Critical hyperparameter governing step size.</li></ul><div style="margin-top:8px;"><span class="cite-badge">p.14-18</span></div>';
+        aiMsg.innerHTML = '<p style="margin-bottom:6px;"><strong>Core Revision Points:</strong></p><ul style="margin:4px 0 6px 18px; line-height:1.6;"><li><strong>SGD:</strong> Mini-batch sampling lowers per-epoch latency.</li><li><strong>Learning Rate:</strong> Fundamental hyperparameter that dictates step size.</li></ul><div style="margin-top:8px;"><span class="cite-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg> p. 14-18</span></div>';
       }
     }, 700);
   }
