@@ -29,21 +29,11 @@ CREATE TABLE IF NOT EXISTS quizzes(id INTEGER PRIMARY KEY, doc_id INT, data TEXT
 CREATE TABLE IF NOT EXISTS usage(id INTEGER PRIMARY KEY, user_id INT, kind TEXT, created REAL);
 """
 
-def db():
-    if "db" not in g:
-        g.db = sqlite3.connect("data/app.db")
-        g.db.row_factory = sqlite3.Row
-        # Enforce foreign keys in SQLite
-        g.db.execute("PRAGMA foreign_keys = ON")
-    return g.db
-
-@app.teardown_appcontext
-def close(_):
-    d = g.pop("db", None)
-    if d: d.close()
+from db import get_db as db, close_db, DB_PATH
+app.teardown_appcontext(close_db)
 
 # Initialize base schema and Enterprise RBAC tables
-with sqlite3.connect("data/app.db") as _c:
+with sqlite3.connect(DB_PATH) as _c:
     _c.executescript(SCHEMA)
     rbac.init_rbac_db(_c)
 

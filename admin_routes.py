@@ -8,7 +8,7 @@ import json
 import time
 import shutil
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort, send_file
-from app import db
+from db import get_db as db
 import rbac
 from rbac import (
     permission_required, role_required, has_permission, has_role,

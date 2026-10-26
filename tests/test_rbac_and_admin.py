@@ -37,17 +37,21 @@ class TestEnterpriseRBAC(unittest.TestCase):
         # Truncate tables for a clean test run
         for tbl in ["audit_logs", "ai_usage_events", "document_reports", "support_tickets", "shared_documents", "classroom_members", "classrooms", "institutions", "user_roles", "profiles", "chunks", "msgs", "quizzes", "docs", "users"]:
             self.conn.execute(f"DELETE FROM {tbl}")
-        self.conn.commit()
+        # Patch db module to point to isolated test database
+        import db as db_module
+        db_module.DB_PATH = TEST_DB
+        self.original_get_db = db_module.get_db
 
-        # Monkey-patch db() in app and rbac during test execution
         def get_test_db():
             conn = sqlite3.connect(TEST_DB)
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA foreign_keys = ON")
             return conn
 
-        self.original_db = flask_app.db
+        db_module.get_db = get_test_db
+        db_module.db = get_test_db
         flask_app.db = get_test_db
+        rbac.db = get_test_db
 
         self.client = flask_app.app.test_client()
 
@@ -97,7 +101,12 @@ class TestEnterpriseRBAC(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
-        flask_app.db = self.original_db
+        import db as db_module
+        if hasattr(self, 'original_get_db'):
+            db_module.get_db = self.original_get_db
+            db_module.db = self.original_get_db
+            flask_app.db = self.original_get_db
+            rbac.db = self.original_get_db
 
     @classmethod
     def tearDownClass(cls):

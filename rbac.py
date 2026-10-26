@@ -9,6 +9,7 @@ import time
 import sqlite3
 from functools import wraps
 from flask import g, session, request, redirect, url_for, abort, jsonify, flash, render_template
+from db import get_db as db
 
 # ==============================================================================
 # Role Definitions & Centralized Permission Matrix
@@ -457,7 +458,6 @@ def get_user_roles(uid, institution_id=None):
     """
     if not uid:
         return []
-    from app import db
     conn = db()
     query = """
         SELECT r.slug, ur.institution_id
@@ -543,7 +543,6 @@ def can_access_document(uid, did, write=False):
     """
     if not uid:
         return False, None
-    from app import db
     conn = db()
 
     doc = conn.execute("SELECT * FROM docs WHERE id = ?", (did,)).fetchone()
@@ -588,7 +587,6 @@ def log_audit(action, target_type=None, target_id=None, details=None, status="su
     Captures user ID, IP address, user agent, and timestamp.
     """
     try:
-        from app import db
         conn = db()
         uid = session.get("uid")
         ip = request.remote_addr if request else None
@@ -621,7 +619,6 @@ COST_RATES = {
 def track_ai_usage(uid, doc_id, kind, model, prompt_tokens=0, completion_tokens=0, latency_ms=0.0, error=None):
     """Records AI token consumption, latency, and estimated cost."""
     try:
-        from app import db
         conn = db()
         rate = COST_RATES.get(kind, 0.0005)
         total_tok = (prompt_tokens or 0) + (completion_tokens or 0)
@@ -643,7 +640,6 @@ def track_ai_usage(uid, doc_id, kind, model, prompt_tokens=0, completion_tokens=
 def is_feature_enabled(key, uid=None):
     """Checks whether a feature flag is enabled for the current audience."""
     try:
-        from app import db
         conn = db()
         row = conn.execute("SELECT is_enabled, audience FROM feature_flags WHERE key = ?", (key,)).fetchone()
         if not row:
@@ -665,7 +661,6 @@ def is_feature_enabled(key, uid=None):
 def is_maintenance_active(uid=None):
     """Returns True if platform maintenance mode is currently turned on."""
     try:
-        from app import db
         conn = db()
         row = conn.execute("SELECT is_enabled, audience FROM feature_flags WHERE key = 'maintenance_mode'").fetchone()
         if not row or not row["is_enabled"]:
@@ -699,7 +694,6 @@ def permission_required(permission_slug):
                 return redirect(url_for("login"))
 
             # Check if user account is deactivated
-            from app import db
             profile = db().execute("SELECT status FROM profiles WHERE user_id = ?", (uid,)).fetchone()
             if profile and profile["status"] == "deactivated":
                 log_audit("deactivated_user_access_attempt", target_type="user", target_id=uid, status="denied")
