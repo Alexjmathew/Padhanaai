@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "echo 'Build complete'",
   "rewrites": [
     {
       "source": "/(.*)",

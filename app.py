@@ -336,4 +336,7 @@ def api_quiz(did):
     return jsonify(quiz=quiz)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    if not os.getenv("VERCEL") and not os.getenv("CI"):
+        app.run(debug=True)
+    else:
+        print("Vercel or CI environment detected: skipping local development server loop.")
